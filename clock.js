@@ -1,5 +1,5 @@
 /**
- * OBSカスタム時計ジェネレーター - 時計表示ページロジック (改訂版 4)
+ * OBSカスタム時計ジェネレーター - 時計表示ページロジック (改訂版 4.1)
  */
 let clockInterval;
 let clockSettings = {};
@@ -52,7 +52,23 @@ function generateClockHTML(date, settings) {
     }
     return visibleParts.map(p => `<div class="part-wrapper ${p.wrapperClass}">${p.content}</div>`).join('');
 }
-function formatYear(date, settings) { return `<span class="year-element">${date.getFullYear()}${settings.dateFormat === 'japanese' ? '年' : ''}</span>`; }
+// --- バグ修正箇所 ---
+function formatYear(date, settings) {
+    const yearStr = `<span class="year-element">${date.getFullYear()}</span>`;
+    let separator = '';
+
+    if (settings.dateFormat === 'japanese') {
+        separator = `<span class="year-element">年</span>`;
+    } else if (settings.showDate) { // 日付も表示される場合のみ ./ を追加
+        const sepStyle = `style="margin: 0 ${settings.spacingDot}px;"`;
+        if (settings.dateFormat === 'slash') {
+            separator = `<span class="date-element separator" ${sepStyle}>/</span>`;
+        } else if (settings.dateFormat === 'dot') {
+            separator = `<span class="date-element separator" ${sepStyle}>.</span>`;
+        }
+    }
+    return yearStr + separator;
+}
 function formatDateOnly(date, settings) {
     const m = date.getMonth() + 1, d = date.getDate(), pad = (n) => String(n).padStart(2, '0');
     const sep = (s) => `<span class="date-element separator" style="margin: 0 ${settings.spacingDot}px;">${s}</span>`;
@@ -82,8 +98,8 @@ function applyClockStyles(element, settings) {
     const applyMargins = (container) => {
         container.querySelectorAll('.part-wrapper').forEach(w => w.style.marginRight = '0');
         const year = container.querySelector('.year-wrapper'), date = container.querySelector('.date-wrapper'), day = container.querySelector('.day-wrapper');
-        if (year) year.style.marginRight = `${settings.spacingYearDate}px`;
-        if (date) date.style.marginRight = `${settings.spacingDateDay}px`;
+        if (year && date) year.style.marginRight = `${settings.spacingYearDate}px`;
+        if (date && day) date.style.marginRight = `${settings.spacingDateDay}px`;
         if (day) day.style.marginRight = `${settings.spacingDayTime}px`;
         const wrappers = container.querySelectorAll('.part-wrapper');
         if (wrappers.length > 0) wrappers[wrappers.length - 1].style.marginRight = '0px';
