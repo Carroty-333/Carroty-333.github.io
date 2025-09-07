@@ -1,5 +1,5 @@
 /**
- * OBSカスタム時計ジェネレーター - 設定ページロジック (改訂版 3)
+ * OBSカスタム時計ジェネレーター - 設定ページロジック (改訂版 4)
  */
 let previewInterval;
 
@@ -20,19 +20,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initializeEventListeners() {
     document.querySelectorAll('input, select').forEach(input => {
-        input.addEventListener('change', updatePreview);
-        input.addEventListener('input', updatePreview);
+        input.addEventListener('change', updatePreview); input.addEventListener('input', updatePreview);
     });
     setupColorInputSync('fontColor', 'fontColorText');
     setupColorInputSync('strokeColor', 'strokeColorText');
     setupColorInputSync('previewBgColor', 'previewBgColorText', true);
-
     document.getElementById('fontPreset').addEventListener('change', (e) => {
         const fontFamilyInput = document.getElementById('fontFamily');
         if (e.target.value) {
             fontFamilyInput.value = e.target.value;
-            loadFont(e.target.value);
-            updatePreview();
+            loadFont(e.target.value); updatePreview();
         }
     });
     document.getElementById('fontFamily').addEventListener('change', (e) => loadFont(e.target.value));
@@ -43,42 +40,19 @@ function initializeEventListeners() {
 async function populateFontSelector() {
     const select = document.getElementById('fontPreset');
     select.innerHTML = '<option value="" disabled>-- Webフォント (全環境共通) --</option>';
-
-    // Webフォントを追加
     for (const font in googleFonts) {
-        const option = document.createElement('option');
-        option.value = font;
-        option.textContent = font.split(',')[0].replace(/'/g, "");
-        select.appendChild(option);
+        select.add(new Option(font.split(',')[0].replace(/'/g, ""), font));
     }
-    // 初期フォントをNoto Sans JPに設定
     select.value = "'Noto Sans JP', sans-serif";
-
-    // ローカルフォントを追加
-    const localFontsSeparator = document.createElement('option');
+    const localFontsSeparator = new Option('--- PCのフォント (Chrome/Edge推奨) ---', '');
     localFontsSeparator.disabled = true;
-    localFontsSeparator.textContent = '--- PCのフォント (Chrome/Edge推奨) ---';
-    select.appendChild(localFontsSeparator);
-
+    select.add(localFontsSeparator);
     if ('queryLocalFonts' in window) {
         try {
-            const availableFonts = await window.queryLocalFonts();
-            const fontFamilies = [...new Set(availableFonts.map(f => f.family))].sort();
-            fontFamilies.forEach(family => {
-                const option = new Option(family, `"${family}"`);
-                select.appendChild(option);
-            });
-        } catch (err) {
-            console.warn('ローカルフォントの取得に失敗しました。', err);
-            const errorOption = new Option('取得に失敗しました', '');
-            errorOption.disabled = true;
-            select.appendChild(errorOption);
-        }
-    } else {
-         const unsupportedOption = new Option('お使いのブラウザは非対応です', '');
-         unsupportedOption.disabled = true;
-         select.appendChild(unsupportedOption);
-    }
+            const fonts = await window.queryLocalFonts();
+            [...new Set(fonts.map(f => f.family))].sort().forEach(family => select.add(new Option(family, `"${family}"`)));
+        } catch (err) { select.add(new Option('取得に失敗しました', '', false, false)).disabled = true; console.warn(err); }
+    } else { select.add(new Option('お使いのブラウザは非対応です', '', false, false)).disabled = true; }
 }
 
 function setupColorInputSync(pickerId, textId, isPreviewBg = false) {
@@ -97,17 +71,14 @@ function updateDayFormatOptions() {
     document.getElementById('day-format-en-upper').textContent = ['SUN','MON','TUE','WED','THU','FRI','SAT'][dayIndex];
 }
 
-function loadFont(fontFamily) {
-    const fontLink = document.getElementById('googleFontLink');
-    fontLink.href = googleFonts[fontFamily] || "";
-}
+function loadFont(fontFamily) { document.getElementById('googleFontLink').href = googleFonts[fontFamily] || ""; }
 
 function getCurrentSettings() {
     return {
         showYear: document.getElementById('showYear').checked, showDate: document.getElementById('showDate').checked, showDay: document.getElementById('showDay').checked,
         dateFormat: document.querySelector('input[name="dateFormat"]:checked')?.value, dayFormat: document.getElementById('dayFormat').value, timeFormat: document.querySelector('input[name="timeFormat"]:checked')?.value,
         layout: document.querySelector('input[name="layout"]:checked')?.value,
-        spacingDateDay: parseInt(document.getElementById('spacingDateDay').value), spacingDayTime: parseInt(document.getElementById('spacingDayTime').value), lineSpacing: parseInt(document.getElementById('lineSpacing').value),
+        spacingYearDate: parseInt(document.getElementById('spacingYearDate').value), spacingDateDay: parseInt(document.getElementById('spacingDateDay').value), spacingDayTime: parseInt(document.getElementById('spacingDayTime').value), spacingDot: parseInt(document.getElementById('spacingDot').value), lineSpacing: parseInt(document.getElementById('lineSpacing').value),
         fontFamily: document.getElementById('fontFamily').value, fontColor: document.getElementById('fontColor').value,
         yearFontSize: parseInt(document.getElementById('yearFontSize').value), dateFontSize: parseInt(document.getElementById('dateFontSize').value), dayFontSize: parseInt(document.getElementById('dayFontSize').value), timeFontSize: parseInt(document.getElementById('timeFontSize').value),
         textStroke: document.getElementById('textStroke').checked, strokeWidth: parseInt(document.getElementById('strokeWidth').value), strokeColor: document.getElementById('strokeColor').value,
@@ -122,18 +93,14 @@ function updatePreview() {
     updatePreviewBackground();
 }
 
-function updatePreviewBackground() {
-    document.getElementById('previewArea').style.backgroundColor = document.getElementById('previewBgColor').value;
-}
+function updatePreviewBackground() { document.getElementById('previewArea').style.backgroundColor = document.getElementById('previewBgColor').value; }
 
 function generateClockHTML(date, settings) {
-    const parts = [];
-    if (settings.showYear || settings.showDate) { parts.push({ type: 'date', wrapperClass: 'date-wrapper', content: formatDate(date, settings) }); }
-    if (settings.showDay) { parts.push({ type: 'day', wrapperClass: 'day-wrapper', content: `<span class="day-element">${formatDay(date, settings.dayFormat)}</span>` }); }
-    parts.push({ type: 'time', wrapperClass: 'time-wrapper', content: `<span class="time-element">${formatTime(date, settings.timeFormat)}</span>` });
-
-    const visibleParts = parts.filter(p => p.content);
-    
+    const visibleParts = [];
+    if (settings.showYear) visibleParts.push({ type: 'year', wrapperClass: 'year-wrapper', content: formatYear(date, settings) });
+    if (settings.showDate) visibleParts.push({ type: 'date', wrapperClass: 'date-wrapper', content: formatDateOnly(date, settings) });
+    if (settings.showDay) visibleParts.push({ type: 'day', wrapperClass: 'day-wrapper', content: `<span class="day-element">${formatDay(date, settings.dayFormat)}</span>` });
+    visibleParts.push({ type: 'time', wrapperClass: 'time-wrapper', content: `<span class="time-element">${formatTime(date, settings.timeFormat)}</span>` });
     if (settings.layout === 'vertical') {
         const datePartsHtml = visibleParts.filter(p => p.type !== 'time').map(p => `<div class="part-wrapper ${p.wrapperClass}">${p.content}</div>`).join('');
         const timePartHtml = visibleParts.filter(p => p.type === 'time').map(p => `<div class="part-wrapper ${p.wrapperClass}">${p.content}</div>`).join('');
@@ -141,22 +108,15 @@ function generateClockHTML(date, settings) {
     }
     return visibleParts.map(p => `<div class="part-wrapper ${p.wrapperClass}">${p.content}</div>`).join('');
 }
-
-function formatDate(date, settings) {
-    if (!settings.showYear && !settings.showDate) return '';
-    const y = date.getFullYear(), m = date.getMonth() + 1, d = date.getDate();
-    const pad = (n) => String(n).padStart(2, '0');
-    const sep = (s) => `<span class="date-element separator">${s}</span>`;
-    let yearPart = settings.showYear ? `<span class="year-element">${y}</span>` : '';
-    let datePart = '';
-    if (settings.showDate) {
-        switch (settings.dateFormat) {
-            case 'japanese': datePart = (settings.showYear ? `<span class="year-element">年</span>` : '') + `<span class="date-element">${m}</span><span class="date-element">月</span><span class="date-element">${d}</span><span class="date-element">日</span>`; break;
-            case 'slash': datePart = (settings.showYear ? sep('/') : '') + `<span class="date-element">${pad(m)}</span>${sep('/')}<span class="date-element">${pad(d)}</span>`; break;
-            case 'dot': datePart = (settings.showYear ? sep('.') : '') + `<span class="date-element">${pad(m)}</span>${sep('.')}<span class="date-element">${pad(d)}</span>`; break;
-        }
-    } else if (settings.showYear) { datePart = '年'; }
-    return yearPart + datePart;
+function formatYear(date, settings) { return `<span class="year-element">${date.getFullYear()}${settings.dateFormat === 'japanese' ? '年' : ''}</span>`; }
+function formatDateOnly(date, settings) {
+    const m = date.getMonth() + 1, d = date.getDate(), pad = (n) => String(n).padStart(2, '0');
+    const sep = (s) => `<span class="date-element separator" style="margin: 0 ${settings.spacingDot}px;">${s}</span>`;
+    switch (settings.dateFormat) {
+        case 'japanese': return `<span class="date-element">${m}月${d}日</span>`;
+        case 'slash': return `<span class="date-element">${pad(m)}</span>${sep('/')}<span class="date-element">${pad(d)}</span>`;
+        case 'dot': return `<span class="date-element">${pad(m)}</span>${sep('.')}<span class="date-element">${pad(d)}</span>`;
+    }
 }
 function formatDay(date, format) {
     const days = { short: ['(日)','(月)','(火)','(水)','(木)','(金)','(土)'], medium: ['日曜','月曜','火曜','水曜','木曜','金曜','土曜'], long: ['日曜日','月曜日','火曜日','水曜日','木曜日','金曜日','土曜日'], 'en-short': ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], 'en-upper': ['SUN','MON','TUE','WED','THU','FRI','SAT'] };
@@ -176,45 +136,36 @@ function applyClockStyles(element, settings) {
     element.className = `clock-display ${settings.layout}`;
     element.style.fontFamily = settings.fontFamily;
     element.style.color = settings.fontColor;
-
-    // Individual Spacing
-    const dateWrapper = element.querySelector('.date-wrapper'), dayWrapper = element.querySelector('.day-wrapper'), timeWrapper = element.querySelector('.time-wrapper');
-    if (dateWrapper && dayWrapper) { dateWrapper.style.marginRight = `${settings.spacingDateDay}px`; }
-    else if (dateWrapper && timeWrapper) { dateWrapper.style.marginRight = `${settings.spacingDayTime}px`; }
-    if (dayWrapper && timeWrapper) { dayWrapper.style.marginRight = `${settings.spacingDayTime}px`; }
-    
-    // Vertical layout spacing
-    if (settings.layout === 'vertical') element.style.gap = `${settings.lineSpacing}px`;
-    
-    // Font Sizes
+    const applyMargins = (container) => {
+        container.querySelectorAll('.part-wrapper').forEach(w => w.style.marginRight = '0');
+        const year = container.querySelector('.year-wrapper'), date = container.querySelector('.date-wrapper'), day = container.querySelector('.day-wrapper');
+        if (year) year.style.marginRight = `${settings.spacingYearDate}px`;
+        if (date) date.style.marginRight = `${settings.spacingDateDay}px`;
+        if (day) day.style.marginRight = `${settings.spacingDayTime}px`;
+        const wrappers = container.querySelectorAll('.part-wrapper');
+        if (wrappers.length > 0) wrappers[wrappers.length - 1].style.marginRight = '0px';
+    };
+    if (settings.layout === 'horizontal') { applyMargins(element); } 
+    else { element.style.gap = `${settings.lineSpacing}px`; const dateSection = element.querySelector('.date-section'); if(dateSection) applyMargins(dateSection); }
     element.querySelectorAll('.year-element').forEach(el => el.style.fontSize = `${settings.yearFontSize}px`);
     element.querySelectorAll('.date-element').forEach(el => el.style.fontSize = `${settings.dateFontSize}px`);
     element.querySelectorAll('.day-element').forEach(el => el.style.fontSize = `${settings.dayFontSize}px`);
     element.querySelectorAll('.time-element').forEach(el => el.style.fontSize = `${settings.timeFontSize}px`);
-    
-    // Text Stroke
     if (settings.textStroke && settings.strokeWidth > 0) {
         const { strokeWidth, strokeColor } = settings, shadows = [];
-        for(let i = 0; i < 360; i += 16) { // More directions for smoother stroke
+        for(let i = 0; i < 360; i += 16) {
             const angle = i * (Math.PI / 180);
             shadows.push(`${strokeWidth * Math.cos(angle)}px ${strokeWidth * Math.sin(angle)}px 0 ${strokeColor}`);
         }
         element.style.textShadow = shadows.join(',');
-    } else {
-        element.style.textShadow = 'none';
-    }
+    } else { element.style.textShadow = 'none'; }
 }
 
-function startPreviewTimer() {
-    if (previewInterval) clearInterval(previewInterval);
-    previewInterval = setInterval(updatePreview, 1000);
-}
+function startPreviewTimer() { if (previewInterval) clearInterval(previewInterval); previewInterval = setInterval(updatePreview, 1000); }
 
 function generateUrl() {
     const settings = getCurrentSettings();
-    if (googleFonts[settings.fontFamily]) {
-        settings.googleFont = encodeURIComponent(googleFonts[settings.fontFamily]);
-    }
+    if (googleFonts[settings.fontFamily]) { settings.googleFont = encodeURIComponent(googleFonts[settings.fontFamily]); }
     const path = window.location.pathname.replace('index.html', '').replace(/\/$/, '');
     const baseUrl = `${window.location.origin}${path}/clock.html`;
     const params = new URLSearchParams(settings);
@@ -229,7 +180,5 @@ async function copyUrl() {
         const btn = document.getElementById('copyUrl'), originalText = btn.textContent;
         btn.textContent = 'コピーしました！'; btn.style.backgroundColor = '#4CAF50';
         setTimeout(() => { btn.textContent = originalText; btn.style.backgroundColor = ''; }, 2000);
-    } catch (err) {
-        urlTextarea.select(); document.execCommand('copy'); alert('URLをクリップボードにコピーしました。');
-    }
+    } catch (err) { urlTextarea.select(); document.execCommand('copy'); alert('URLをクリップボードにコピーしました。'); }
 }

@@ -87,8 +87,7 @@
                 <div class="setting-group">
                     <label>フォントカラー:</label>
                     <div class="color-input-container">
-                        <input type="color" id="fontColor" value="#ffffff">
-                        <input type="text" id="fontColorText" value="#ffffff">
+                        <input type="color" id="fontColor" value="#ffffff"><input type="text" id="fontColorText" value="#ffffff">
                     </div>
                 </div>
                 <h4>フォントサイズ (px)</h4>
@@ -113,13 +112,19 @@
             <div class="section">
                 <h3>間隔 (px)</h3>
                 <div class="setting-group">
+                    <label>西暦↔日付の間隔: <input type="number" id="spacingYearDate" value="8" min="-50" max="100"></label>
+                </div>
+                <div class="setting-group">
                     <label>日付↔曜日の間隔: <input type="number" id="spacingDateDay" value="15" min="-50" max="100"></label>
                 </div>
                  <div class="setting-group">
                     <label>曜日↔時間の間隔: <input type="number" id="spacingDayTime" value="20" min="-50" max="100"></label>
                 </div>
                 <div class="setting-group">
-                    <label>行間の間隔 (2段組のみ): <input type="number" id="lineSpacing" value="0" min="-100" max="100"></label>
+                    <label>区切り文字(./)と数字の間隔: <input type="number" id="spacingDot" value="-2" min="-20" max="20"></label>
+                </div>
+                <div class="setting-group">
+                    <label>行間の間隔 (2段組のみ): <input type="number" id="lineSpacing" value="0" min="-200" max="100"></label>
                 </div>
             </div>
             
