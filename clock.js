@@ -1,5 +1,5 @@
 /**
- * OBSカスタム時計ジェネレーター - 時計表示ページロジック (改訂版 2)
+ * OBSカスタム時計ジェネレーター - 時計表示ページロジック (改訂版 3)
  */
 let clockInterval;
 let clockSettings = {};
@@ -8,7 +8,7 @@ const defaultSettings = {
     showYear: true, showDate: true, showDay: true,
     dateFormat: 'japanese', dayFormat: 'short', timeFormat: 'colon-hm',
     layout: 'horizontal',
-    spacingYearDate: 8, spacingDateDay: 15, spacingDayTime: 20, lineSpacing: 5,
+    spacingDateDay: 15, spacingDayTime: 20, lineSpacing: 0,
     fontFamily: "'Noto Sans JP', sans-serif", fontColor: '#ffffff',
     yearFontSize: 32, dateFontSize: 32, dayFontSize: 32, timeFontSize: 48,
     textStroke: true, strokeWidth: 2, strokeColor: '#000000',
@@ -29,7 +29,7 @@ function loadSettingsFromURL() {
         if (key in defaultSettings) {
             const defVal = defaultSettings[key];
             if (typeof defVal === 'boolean') clockSettings[key] = value === 'true';
-            else if (typeof defVal === 'number') clockSettings[key] = parseInt(value, 10) || defVal;
+            else if (typeof defVal === 'number') clockSettings[key] = parseInt(value, 10);
             else clockSettings[key] = decodeURIComponent(value);
         }
     }
@@ -59,12 +59,14 @@ function generateClockHTML(date, settings) {
     if (settings.showDay) { parts.push({ type: 'day', wrapperClass: 'day-wrapper', content: `<span class="day-element">${formatDay(date, settings.dayFormat)}</span>` }); }
     parts.push({ type: 'time', wrapperClass: 'time-wrapper', content: `<span class="time-element">${formatTime(date, settings.timeFormat)}</span>` });
 
+    const visibleParts = parts.filter(p => p.content);
+
     if (settings.layout === 'vertical') {
-        const datePartsHtml = parts.filter(p => p.type !== 'time').map(p => `<div class="part-wrapper ${p.wrapperClass}">${p.content}</div>`).join('');
-        const timePartHtml = parts.filter(p => p.type === 'time').map(p => `<div class="part-wrapper ${p.wrapperClass}">${p.content}</div>`).join('');
+        const datePartsHtml = visibleParts.filter(p => p.type !== 'time').map(p => `<div class="part-wrapper ${p.wrapperClass}">${p.content}</div>`).join('');
+        const timePartHtml = visibleParts.filter(p => p.type === 'time').map(p => `<div class="part-wrapper ${p.wrapperClass}">${p.content}</div>`).join('');
         return `<div class="date-section">${datePartsHtml}</div><div class="time-section">${timePartHtml}</div>`;
     }
-    return parts.map(p => `<div class="part-wrapper ${p.wrapperClass}">${p.content}</div>`).join('');
+    return visibleParts.map(p => `<div class="part-wrapper ${p.wrapperClass}">${p.content}</div>`).join('');
 }
 function formatDate(date, settings) {
     if (!settings.showYear && !settings.showDate) return '';
@@ -123,7 +125,7 @@ function applyClockStyles(element, settings) {
     
     if (settings.textStroke && settings.strokeWidth > 0) {
         const { strokeWidth, strokeColor } = settings, shadows = [];
-        for(let i = 0; i < 360; i += 22.5) {
+        for(let i = 0; i < 360; i += 16) {
             const angle = i * (Math.PI / 180);
             shadows.push(`${strokeWidth * Math.cos(angle)}px ${strokeWidth * Math.sin(angle)}px 0 ${strokeColor}`);
         }

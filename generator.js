@@ -1,5 +1,5 @@
 /**
- * OBSカスタム時計ジェネレーター - 設定ページロジック (改訂版 2)
+ * OBSカスタム時計ジェネレーター - 設定ページロジック (改訂版 3)
  */
 let previewInterval;
 
@@ -42,44 +42,44 @@ function initializeEventListeners() {
 
 async function populateFontSelector() {
     const select = document.getElementById('fontPreset');
-    select.innerHTML = '<option value="">-- Webフォント --</option>';
+    select.innerHTML = '<option value="" disabled>-- Webフォント (全環境共通) --</option>';
 
-    Object.keys(googleFonts).forEach(font => {
+    // Webフォントを追加
+    for (const font in googleFonts) {
         const option = document.createElement('option');
         option.value = font;
         option.textContent = font.split(',')[0].replace(/'/g, "");
         select.appendChild(option);
-    });
+    }
+    // 初期フォントをNoto Sans JPに設定
+    select.value = "'Noto Sans JP', sans-serif";
+
+    // ローカルフォントを追加
+    const localFontsSeparator = document.createElement('option');
+    localFontsSeparator.disabled = true;
+    localFontsSeparator.textContent = '--- PCのフォント (Chrome/Edge推奨) ---';
+    select.appendChild(localFontsSeparator);
 
     if ('queryLocalFonts' in window) {
         try {
             const availableFonts = await window.queryLocalFonts();
-            const separator = document.createElement('option');
-            separator.disabled = true;
-            separator.textContent = '--- ローカルフォント ---';
-            select.appendChild(separator);
-
             const fontFamilies = [...new Set(availableFonts.map(f => f.family))].sort();
             fontFamilies.forEach(family => {
                 const option = new Option(family, `"${family}"`);
                 select.appendChild(option);
             });
-            // 初期フォントをNoto Sans JPに設定
-            select.value = "'Noto Sans JP', sans-serif";
-
         } catch (err) {
             console.warn('ローカルフォントの取得に失敗しました。', err);
-            const errorOption = new Option('ローカルフォント取得不可', '');
+            const errorOption = new Option('取得に失敗しました', '');
             errorOption.disabled = true;
             select.appendChild(errorOption);
         }
     } else {
-         const unsupportedOption = new Option('ローカルフォント非対応ブラウザ', '');
+         const unsupportedOption = new Option('お使いのブラウザは非対応です', '');
          unsupportedOption.disabled = true;
          select.appendChild(unsupportedOption);
     }
 }
-
 
 function setupColorInputSync(pickerId, textId, isPreviewBg = false) {
     const picker = document.getElementById(pickerId), text = document.getElementById(textId);
@@ -107,7 +107,7 @@ function getCurrentSettings() {
         showYear: document.getElementById('showYear').checked, showDate: document.getElementById('showDate').checked, showDay: document.getElementById('showDay').checked,
         dateFormat: document.querySelector('input[name="dateFormat"]:checked')?.value, dayFormat: document.getElementById('dayFormat').value, timeFormat: document.querySelector('input[name="timeFormat"]:checked')?.value,
         layout: document.querySelector('input[name="layout"]:checked')?.value,
-        spacingYearDate: parseInt(document.getElementById('spacingYearDate').value), spacingDateDay: parseInt(document.getElementById('spacingDateDay').value), spacingDayTime: parseInt(document.getElementById('spacingDayTime').value), lineSpacing: parseInt(document.getElementById('lineSpacing').value),
+        spacingDateDay: parseInt(document.getElementById('spacingDateDay').value), spacingDayTime: parseInt(document.getElementById('spacingDayTime').value), lineSpacing: parseInt(document.getElementById('lineSpacing').value),
         fontFamily: document.getElementById('fontFamily').value, fontColor: document.getElementById('fontColor').value,
         yearFontSize: parseInt(document.getElementById('yearFontSize').value), dateFontSize: parseInt(document.getElementById('dateFontSize').value), dayFontSize: parseInt(document.getElementById('dayFontSize').value), timeFontSize: parseInt(document.getElementById('timeFontSize').value),
         textStroke: document.getElementById('textStroke').checked, strokeWidth: parseInt(document.getElementById('strokeWidth').value), strokeColor: document.getElementById('strokeColor').value,
@@ -128,22 +128,18 @@ function updatePreviewBackground() {
 
 function generateClockHTML(date, settings) {
     const parts = [];
-    if (settings.showYear || settings.showDate) {
-        parts.push({ type: 'date', wrapperClass: 'date-wrapper', content: formatDate(date, settings) });
-    }
-    if (settings.showDay) {
-        parts.push({ type: 'day', wrapperClass: 'day-wrapper', content: `<span class="day-element">${formatDay(date, settings.dayFormat)}</span>` });
-    }
+    if (settings.showYear || settings.showDate) { parts.push({ type: 'date', wrapperClass: 'date-wrapper', content: formatDate(date, settings) }); }
+    if (settings.showDay) { parts.push({ type: 'day', wrapperClass: 'day-wrapper', content: `<span class="day-element">${formatDay(date, settings.dayFormat)}</span>` }); }
     parts.push({ type: 'time', wrapperClass: 'time-wrapper', content: `<span class="time-element">${formatTime(date, settings.timeFormat)}</span>` });
 
-    const html = parts.map(p => `<div class="part-wrapper ${p.wrapperClass}">${p.content}</div>`).join('');
-
+    const visibleParts = parts.filter(p => p.content);
+    
     if (settings.layout === 'vertical') {
-        const datePartsHtml = parts.filter(p => p.type !== 'time').map(p => `<div class="part-wrapper ${p.wrapperClass}">${p.content}</div>`).join('');
-        const timePartHtml = parts.filter(p => p.type === 'time').map(p => `<div class="part-wrapper ${p.wrapperClass}">${p.content}</div>`).join('');
+        const datePartsHtml = visibleParts.filter(p => p.type !== 'time').map(p => `<div class="part-wrapper ${p.wrapperClass}">${p.content}</div>`).join('');
+        const timePartHtml = visibleParts.filter(p => p.type === 'time').map(p => `<div class="part-wrapper ${p.wrapperClass}">${p.content}</div>`).join('');
         return `<div class="date-section">${datePartsHtml}</div><div class="time-section">${timePartHtml}</div>`;
     }
-    return html;
+    return visibleParts.map(p => `<div class="part-wrapper ${p.wrapperClass}">${p.content}</div>`).join('');
 }
 
 function formatDate(date, settings) {
@@ -151,19 +147,15 @@ function formatDate(date, settings) {
     const y = date.getFullYear(), m = date.getMonth() + 1, d = date.getDate();
     const pad = (n) => String(n).padStart(2, '0');
     const sep = (s) => `<span class="date-element separator">${s}</span>`;
-    
     let yearPart = settings.showYear ? `<span class="year-element">${y}</span>` : '';
     let datePart = '';
-
     if (settings.showDate) {
         switch (settings.dateFormat) {
             case 'japanese': datePart = (settings.showYear ? `<span class="year-element">年</span>` : '') + `<span class="date-element">${m}</span><span class="date-element">月</span><span class="date-element">${d}</span><span class="date-element">日</span>`; break;
             case 'slash': datePart = (settings.showYear ? sep('/') : '') + `<span class="date-element">${pad(m)}</span>${sep('/')}<span class="date-element">${pad(d)}</span>`; break;
             case 'dot': datePart = (settings.showYear ? sep('.') : '') + `<span class="date-element">${pad(m)}</span>${sep('.')}<span class="date-element">${pad(d)}</span>`; break;
         }
-    } else if (settings.showYear) {
-         datePart = '年';
-    }
+    } else if (settings.showYear) { datePart = '年'; }
     return yearPart + datePart;
 }
 function formatDay(date, format) {
@@ -188,7 +180,7 @@ function applyClockStyles(element, settings) {
     // Individual Spacing
     const dateWrapper = element.querySelector('.date-wrapper'), dayWrapper = element.querySelector('.day-wrapper'), timeWrapper = element.querySelector('.time-wrapper');
     if (dateWrapper && dayWrapper) { dateWrapper.style.marginRight = `${settings.spacingDateDay}px`; }
-    else if (dateWrapper && timeWrapper) { dateWrapper.style.marginRight = `${settings.spacingDayTime}px`; } // If day is hidden
+    else if (dateWrapper && timeWrapper) { dateWrapper.style.marginRight = `${settings.spacingDayTime}px`; }
     if (dayWrapper && timeWrapper) { dayWrapper.style.marginRight = `${settings.spacingDayTime}px`; }
     
     // Vertical layout spacing
@@ -203,7 +195,7 @@ function applyClockStyles(element, settings) {
     // Text Stroke
     if (settings.textStroke && settings.strokeWidth > 0) {
         const { strokeWidth, strokeColor } = settings, shadows = [];
-        for(let i = 0; i < 360; i += 22.5) { // 16 directions for smooth stroke
+        for(let i = 0; i < 360; i += 16) { // More directions for smoother stroke
             const angle = i * (Math.PI / 180);
             shadows.push(`${strokeWidth * Math.cos(angle)}px ${strokeWidth * Math.sin(angle)}px 0 ${strokeColor}`);
         }
