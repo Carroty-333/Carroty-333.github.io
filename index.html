@@ -13,21 +13,13 @@
         <div class="settings-panel">
             <h1>時計デザイン設定</h1>
             
-            <!-- 表示形式設定 -->
             <div class="section">
                 <h3>表示形式</h3>
-                <div class="setting-group">
-                    <label><input type="checkbox" id="showYear" checked> 西暦を表示</label>
-                </div>
-                <div class="setting-group">
-                    <label><input type="checkbox" id="showDate" checked> 日付を表示</label>
-                </div>
-                <div class="setting-group">
-                    <label><input type="checkbox" id="showDay" checked> 曜日を表示</label>
-                </div>
+                <div class="setting-group"><label><input type="checkbox" id="showYear" checked> 西暦を表示</label></div>
+                <div class="setting-group"><label><input type="checkbox" id="showDate" checked> 日付を表示</label></div>
+                <div class="setting-group"><label><input type="checkbox" id="showDay" checked> 曜日を表示</label></div>
             </div>
 
-            <!-- 日付・曜日フォーマット -->
             <div class="section">
                 <h3>日付・曜日フォーマット</h3>
                 <div class="setting-group">
@@ -50,7 +42,6 @@
                 </div>
             </div>
 
-            <!-- 時間フォーマット -->
             <div class="section">
                 <h3>時間フォーマット</h3>
                 <div class="radio-group">
@@ -61,39 +52,35 @@
                 </div>
             </div>
 
-            <!-- レイアウトと間隔 -->
             <div class="section">
                 <h3>レイアウトと間隔 (px)</h3>
                 <div class="setting-group">
                     <label>レイアウト:</label>
                     <div class="radio-group">
                         <label><input type="radio" name="layout" value="horizontal" checked> 横1列</label>
-                        <label><input type="radio" name="layout" value="vertical"> 2段組（上:日付, 下:時間）</label>
+                        <label><input type="radio" name="layout" value="vertical"> 2段組</label>
                     </div>
                 </div>
                  <div class="setting-group">
-                    <label>要素間の間隔: <input type="number" id="elementSpacing" value="15" min="0" max="100"></label>
+                    <label>西暦↔日付の間隔: <input type="number" id="spacingYearDate" value="8" min="-50" max="100"></label>
+                </div>
+                 <div class="setting-group">
+                    <label>日付↔曜日の間隔: <input type="number" id="spacingDateDay" value="15" min="-50" max="100"></label>
+                </div>
+                 <div class="setting-group">
+                    <label>曜日↔時間の間隔: <input type="number" id="spacingDayTime" value="20" min="-50" max="100"></label>
                 </div>
                 <div class="setting-group">
-                    <label>行間の間隔 (2段組のみ): <input type="number" id="lineSpacing" value="10" min="0" max="100"></label>
+                    <label>行間の間隔 (2段組のみ): <input type="number" id="lineSpacing" value="5" min="-100" max="100"></label>
                 </div>
             </div>
 
-            <!-- フォントと色 -->
             <div class="section">
                 <h3>フォントと色</h3>
                 <div class="setting-group">
                     <label for="fontPreset">フォント選択:</label>
                     <select id="fontPreset">
-                        <option value="">フォントを選択...</option>
-                        <option value="'Noto Sans JP', sans-serif">Noto Sans JP (推奨)</option>
-                        <option value="'M PLUS Rounded 1c', sans-serif">M PLUS Rounded 1c</option>
-                        <option value="'Kosugi Maru', sans-serif">Kosugi Maru</option>
-                        <option value="Meiryo, sans-serif">メイリオ</option>
-                        <option value="'MS Gothic', sans-serif">MSゴシック</option>
-                        <option value="Arial, sans-serif">Arial</option>
-                        <option value="'Times New Roman', serif">Times New Roman</option>
-                        <option value="'Courier New', monospace">Courier New</option>
+                        <option value="">フォントを読込中...</option>
                     </select>
                 </div>
                 <div class="setting-group">
@@ -109,54 +96,36 @@
                 </div>
             </div>
 
-            <!-- フォントサイズ -->
             <div class="section">
                 <h3>フォントサイズ (px)</h3>
-                <div class="setting-group">
-                    <label>西暦: <input type="number" id="yearFontSize" value="24" min="10" max="200"></label>
-                </div>
-                <div class="setting-group">
-                    <label>日付: <input type="number" id="dateFontSize" value="24" min="10" max="200"></label>
-                </div>
-                <div class="setting-group">
-                    <label>曜日: <input type="number" id="dayFontSize" value="24" min="10" max="200"></label>
-                </div>
-                <div class="setting-group">
-                    <label>時間: <input type="number" id="timeFontSize" value="48" min="10" max="200"></label>
-                </div>
+                <div class="setting-group"><label>西暦: <input type="number" id="yearFontSize" value="32" min="10" max="200"></label></div>
+                <div class="setting-group"><label>日付: <input type="number" id="dateFontSize" value="32" min="10" max="200"></label></div>
+                <div class="setting-group"><label>曜日: <input type="number" id="dayFontSize" value="32" min="10" max="200"></label></div>
+                <div class="setting-group"><label>時間: <input type="number" id="timeFontSize" value="48" min="10" max="200"></label></div>
             </div>
 
-            <!-- 縁取り設定 -->
             <div class="section">
                 <h3>縁取り（テキストストローク）</h3>
-                <div class="setting-group">
-                    <label><input type="checkbox" id="textStroke" checked> 縁取りを有効にする</label>
-                </div>
-                <div class="setting-group">
-                    <label>縁の太さ(px): <input type="number" id="strokeWidth" value="2" min="1" max="20"></label>
-                </div>
+                <div class="setting-group"><label><input type="checkbox" id="textStroke" checked> 縁取りを有効にする</label></div>
+                <div class="setting-group"><label>縁の太さ(px): <input type="number" id="strokeWidth" value="2" min="1" max="20"></label></div>
                 <div class="setting-group">
                     <label>縁の色:</label>
                      <div class="color-input-container">
-                        <input type="color" id="strokeColor" value="#000000">
-                        <input type="text" id="strokeColorText" value="#000000">
+                        <input type="color" id="strokeColor" value="#000000"><input type="text" id="strokeColorText" value="#000000">
                     </div>
                 </div>
             </div>
             
-            <!-- プレビュー設定 -->
             <div class="section">
                 <h3>プレビュー設定</h3>
                 <div class="setting-group">
                     <label>プレビュー背景色:</label>
                     <div class="color-input-container">
-                        <input type="color" id="previewBgColor" value="#000000">
-                        <input type="text" id="previewBgColorText" value="#000000">
+                        <input type="color" id="previewBgColor" value="#000000"><input type="text" id="previewBgColorText" value="#000000">
                     </div>
                 </div>
             </div>
 
-            <!-- URL発行 -->
             <div class="section">
                 <h3>URL発行</h3>
                 <button id="generateUrl" class="generate-btn">URLを発行</button>
@@ -167,7 +136,6 @@
             </div>
         </div>
 
-        <!-- 右側：プレビューエリア -->
         <div class="preview-panel">
             <h3>プレビュー</h3>
             <div class="preview-area" id="previewArea">
@@ -175,7 +143,6 @@
             </div>
         </div>
     </div>
-
     <script src="generator.js"></script>
 </body>
 </html>
