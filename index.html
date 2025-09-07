@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OBSカスタム時計ジェネレーター</title>
     <link rel="stylesheet" href="style.css">
+    <link id="googleFontLink" rel="stylesheet">
 </head>
 <body>
     <div class="container">
@@ -32,19 +33,19 @@
                 <div class="setting-group">
                     <label>日付フォーマット:</label>
                     <div class="radio-group">
-                        <label><input type="radio" name="dateFormat" value="japanese" checked> M月D日</label>
-                        <label><input type="radio" name="dateFormat" value="slash"> MM/DD</label>
-                        <label><input type="radio" name="dateFormat" value="dot"> MM.DD</label>
+                        <label><input type="radio" name="dateFormat" value="japanese" checked> YYYY年M月D日</label>
+                        <label><input type="radio" name="dateFormat" value="slash"> YYYY/MM/DD</label>
+                        <label><input type="radio" name="dateFormat" value="dot"> YYYY.MM.DD</label>
                     </div>
                 </div>
                 <div class="setting-group">
                     <label>曜日フォーマット:</label>
                     <select id="dayFormat">
-                        <option value="short">(火)</option>
-                        <option value="medium">火曜</option>
-                        <option value="long">火曜日</option>
-                        <option value="en-short">Tue</option>
-                        <option value="en-upper">TUE</option>
+                        <option value="short" id="day-format-short">(火)</option>
+                        <option value="medium" id="day-format-medium">火曜</option>
+                        <option value="long" id="day-format-long">火曜日</option>
+                        <option value="en-short" id="day-format-en-short">Tue</option>
+                        <option value="en-upper" id="day-format-en-upper">TUE</option>
                     </select>
                 </div>
             </div>
@@ -54,15 +55,15 @@
                 <h3>時間フォーマット</h3>
                 <div class="radio-group">
                     <label><input type="radio" name="timeFormat" value="japanese-hm"> H時m分</label>
-                    <label><input type="radio" name="timeFormat" value="colon-hm" checked> HH:mm</label>
                     <label><input type="radio" name="timeFormat" value="japanese-hms"> H時m分s秒</label>
+                    <label><input type="radio" name="timeFormat" value="colon-hm" checked> HH:mm</label>
                     <label><input type="radio" name="timeFormat" value="colon-hms"> HH:mm:ss</label>
                 </div>
             </div>
 
-            <!-- レイアウト -->
+            <!-- レイアウトと間隔 -->
             <div class="section">
-                <h3>レイアウトと間隔</h3>
+                <h3>レイアウトと間隔 (px)</h3>
                 <div class="setting-group">
                     <label>レイアウト:</label>
                     <div class="radio-group">
@@ -71,10 +72,10 @@
                     </div>
                 </div>
                  <div class="setting-group">
-                    <label>要素間の間隔 (px): <input type="number" id="elementSpacing" value="10" min="0" max="100"></label>
+                    <label>要素間の間隔: <input type="number" id="elementSpacing" value="15" min="0" max="100"></label>
                 </div>
                 <div class="setting-group">
-                    <label>行間の間隔 (px, 2段組のみ): <input type="number" id="lineSpacing" value="5" min="0" max="100"></label>
+                    <label>行間の間隔 (2段組のみ): <input type="number" id="lineSpacing" value="10" min="0" max="100"></label>
                 </div>
             </div>
 
@@ -82,8 +83,22 @@
             <div class="section">
                 <h3>フォントと色</h3>
                 <div class="setting-group">
-                    <label for="fontFamily">フォントファミリー:</label>
-                    <input type="text" id="fontFamily" value="Arial, sans-serif" placeholder="例: Meiryo, 'MS Gothic', sans-serif">
+                    <label for="fontPreset">フォント選択:</label>
+                    <select id="fontPreset">
+                        <option value="">フォントを選択...</option>
+                        <option value="'Noto Sans JP', sans-serif">Noto Sans JP (推奨)</option>
+                        <option value="'M PLUS Rounded 1c', sans-serif">M PLUS Rounded 1c</option>
+                        <option value="'Kosugi Maru', sans-serif">Kosugi Maru</option>
+                        <option value="Meiryo, sans-serif">メイリオ</option>
+                        <option value="'MS Gothic', sans-serif">MSゴシック</option>
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="'Times New Roman', serif">Times New Roman</option>
+                        <option value="'Courier New', monospace">Courier New</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label for="fontFamily">フォントファミリー (手動入力):</label>
+                    <input type="text" id="fontFamily" value="'Noto Sans JP', sans-serif" placeholder="例: Meiryo, 'MS Gothic', sans-serif">
                 </div>
                 <div class="setting-group">
                     <label>フォントカラー:</label>
@@ -107,7 +122,7 @@
                     <label>曜日: <input type="number" id="dayFontSize" value="24" min="10" max="200"></label>
                 </div>
                 <div class="setting-group">
-                    <label>時間: <input type="number" id="timeFontSize" value="32" min="10" max="200"></label>
+                    <label>時間: <input type="number" id="timeFontSize" value="48" min="10" max="200"></label>
                 </div>
             </div>
 
@@ -115,16 +130,28 @@
             <div class="section">
                 <h3>縁取り（テキストストローク）</h3>
                 <div class="setting-group">
-                    <label><input type="checkbox" id="textStroke"> 縁取りを有効にする</label>
+                    <label><input type="checkbox" id="textStroke" checked> 縁取りを有効にする</label>
                 </div>
                 <div class="setting-group">
-                    <label>縁の太さ(px): <input type="number" id="strokeWidth" value="2" min="1" max="10"></label>
+                    <label>縁の太さ(px): <input type="number" id="strokeWidth" value="2" min="1" max="20"></label>
                 </div>
                 <div class="setting-group">
                     <label>縁の色:</label>
                      <div class="color-input-container">
                         <input type="color" id="strokeColor" value="#000000">
                         <input type="text" id="strokeColorText" value="#000000">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- プレビュー設定 -->
+            <div class="section">
+                <h3>プレビュー設定</h3>
+                <div class="setting-group">
+                    <label>プレビュー背景色:</label>
+                    <div class="color-input-container">
+                        <input type="color" id="previewBgColor" value="#000000">
+                        <input type="text" id="previewBgColorText" value="#000000">
                     </div>
                 </div>
             </div>
@@ -143,7 +170,7 @@
         <!-- 右側：プレビューエリア -->
         <div class="preview-panel">
             <h3>プレビュー</h3>
-            <div class="preview-area">
+            <div class="preview-area" id="previewArea">
                 <div id="clockPreview" class="clock-display"></div>
             </div>
         </div>
@@ -152,4 +179,3 @@
     <script src="generator.js"></script>
 </body>
 </html>
-

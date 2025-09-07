@@ -21,7 +21,7 @@ body {
 
 /* 左側設定パネル */
 .settings-panel {
-    flex: 0 0 400px;
+    flex: 0 0 420px;
     background-color: #2a2a2a;
     border-radius: 8px;
     padding: 20px;
@@ -37,7 +37,7 @@ body {
 }
 
 .section {
-    margin-bottom: 30px;
+    margin-bottom: 25px;
     padding: 15px;
     background-color: #333;
     border-radius: 6px;
@@ -49,7 +49,7 @@ body {
     margin-bottom: 15px;
     font-size: 18px;
     border-bottom: 1px solid #555;
-    padding-bottom: 5px;
+    padding-bottom: 8px;
 }
 
 .setting-group {
@@ -58,31 +58,16 @@ body {
 
 .setting-group label {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
     color: #cccccc;
     font-size: 14px;
 }
 
-.radio-group {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
+.radio-group { display: flex; flex-direction: column; gap: 8px; }
+.radio-group label { display: flex; align-items: center; margin-bottom: 0; }
+.radio-group input[type="radio"] { margin-right: 8px; }
 
-.radio-group label {
-    display: flex;
-    align-items: center;
-    margin-bottom: 5px;
-}
-
-.radio-group input[type="radio"] {
-    margin-right: 8px;
-}
-
-input[type="text"],
-input[type="number"],
-select,
-textarea {
+input[type="text"], input[type="number"], select, textarea {
     width: 100%;
     padding: 8px;
     border: 1px solid #555;
@@ -92,65 +77,29 @@ textarea {
     font-size: 14px;
 }
 
-.color-input-container {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
+.color-input-container { display: flex; align-items: center; gap: 10px; }
+.color-input-container input[type="color"] { flex: 0 0 40px; height: 36px; padding: 2px; border-radius: 4px; }
+.color-input-container input[type="text"] { flex: 1; }
+input[type="checkbox"] { margin-right: 8px; transform: scale(1.2); }
 
-.color-input-container input[type="color"] {
-    flex: 0 0 40px;
-    height: 36px;
-    padding: 2px;
-    border: 1px solid #555;
-    border-radius: 4px;
-    background-color: #444;
-}
-
-.color-input-container input[type="text"] {
-    flex: 1;
-}
-
-input[type="checkbox"] {
-    margin-right: 8px;
-    transform: scale(1.2);
-}
-
-/* ボタンスタイル */
-.generate-btn,
-.copy-btn {
+/* ボタン */
+.generate-btn, .copy-btn {
     width: 100%;
     background-color: #4CAF50;
     color: white;
     border: none;
-    padding: 10px 20px;
+    padding: 12px 20px;
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
     transition: background-color 0.3s;
 }
+.generate-btn:hover, .copy-btn:hover { opacity: 0.9; }
+.copy-btn { background-color: #2196F3; margin-top: 10px; }
+.url-output { margin-top: 15px; }
+.url-output textarea { height: 100px; resize: vertical; font-family: monospace; }
 
-.generate-btn:hover,
-.copy-btn:hover {
-    opacity: 0.9;
-}
-
-.copy-btn {
-    background-color: #2196F3;
-    margin-top: 10px;
-}
-
-.url-output {
-    margin-top: 15px;
-}
-
-.url-output textarea {
-    height: 80px;
-    resize: vertical;
-    font-family: monospace;
-}
-
-/* 右側プレビューパネル */
+/* プレビュー */
 .preview-panel {
     flex: 1;
     display: flex;
@@ -160,17 +109,9 @@ input[type="checkbox"] {
     padding: 20px;
     border: 1px solid #444;
 }
-
-.preview-panel h3 {
-    margin-top: 0;
-    margin-bottom: 20px;
-    text-align: center;
-    font-size: 20px;
-}
-
+.preview-panel h3 { margin-top: 0; margin-bottom: 20px; text-align: center; font-size: 20px; }
 .preview-area {
     flex-grow: 1;
-    background-color: #000;
     border: 2px dashed #555;
     border-radius: 6px;
     display: flex;
@@ -178,52 +119,22 @@ input[type="checkbox"] {
     justify-content: center;
     padding: 20px;
     min-height: 200px;
+    transition: background-color 0.3s;
 }
 
-/* 時計表示共通スタイル */
+/* 時計表示 */
 .clock-display {
     text-align: center;
     line-height: 1.2;
-    white-space: nowrap; /* OBSでの折り返しを防ぐ */
+    white-space: nowrap;
 }
+.clock-display.horizontal { display: flex; align-items: baseline; justify-content: center; flex-wrap: wrap; }
+.clock-display.vertical { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.clock-display .date-section, .clock-display .time-section { display: flex; align-items: baseline; flex-wrap: wrap; justify-content: center; }
 
-.clock-display.horizontal {
-    display: flex;
-    align-items: baseline; /* 文字のベースラインを揃える */
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-.clock-display.vertical {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-.clock-display .date-section,
-.clock-display .time-section {
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-
-/* レスポンシブ対応 */
+/* レスポンシブ */
 @media (max-width: 1024px) {
-    .container {
-        flex-direction: column;
-        height: auto;
-    }
-    
-    .settings-panel {
-        flex: none;
-        max-height: none;
-        order: 2; /* プレビューを上に */
-    }
-    
-    .preview-panel {
-        flex: none;
-        order: 1;
-    }
+    .container { flex-direction: column; height: auto; }
+    .settings-panel { flex: none; max-height: none; order: 2; }
+    .preview-panel { flex: none; order: 1; }
 }

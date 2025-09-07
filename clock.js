@@ -1,6 +1,5 @@
 /**
- * OBSカスタム時計ジェネレーター - 時計表示ページロジック
- * URLパラメータから設定を読み込み、動的に時計を表示
+ * OBSカスタム時計ジェネレーター - 時計表示ページロジック (改訂版)
  */
 
 let clockInterval;
@@ -10,14 +9,16 @@ const defaultSettings = {
     showYear: true, showDate: true, showDay: true,
     dateFormat: 'japanese', dayFormat: 'short', timeFormat: 'colon-hm',
     layout: 'horizontal',
-    elementSpacing: 10, lineSpacing: 5,
-    fontFamily: 'Arial, sans-serif', fontColor: '#ffffff',
-    yearFontSize: 24, dateFontSize: 24, dayFontSize: 24, timeFontSize: 32,
-    textStroke: false, strokeWidth: 2, strokeColor: '#000000'
+    elementSpacing: 15, lineSpacing: 10,
+    fontFamily: "'Noto Sans JP', sans-serif", fontColor: '#ffffff',
+    yearFontSize: 24, dateFontSize: 24, dayFontSize: 24, timeFontSize: 48,
+    textStroke: true, strokeWidth: 2, strokeColor: '#000000',
+    googleFont: ''
 };
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
     loadSettingsFromURL();
+    loadGoogleFont();
     updateClock();
     startClockTimer();
 });
@@ -33,42 +34,62 @@ function loadSettingsFromURL() {
             } else if (typeof defaultValue === 'number') {
                 clockSettings[key] = parseInt(value, 10) || defaultValue;
             } else {
-                clockSettings[key] = value;
+                clockSettings[key] = decodeURIComponent(value);
             }
         }
     }
 }
 
+function loadGoogleFont() {
+    if (clockSettings.googleFont) {
+        const link = document.createElement('link');
+        link.href = clockSettings.googleFont;
+        link.rel = 'stylesheet';
+        document.head.appendChild(link);
+    }
+}
+
 function updateClock() {
     const clockElement = document.getElementById('clockDisplay');
-    const now = new Date();
-    clockElement.innerHTML = generateClockHTML(now, clockSettings);
+    clockElement.innerHTML = generateClockHTML(new Date(), clockSettings);
     applyClockStyles(clockElement, clockSettings);
 }
 
 function generateClockHTML(date, settings) {
-    const parts = [];
-    if (settings.showYear) parts.push(`<span class="year-element">${date.getFullYear()}年</span>`);
-    if (settings.showDate) parts.push(`<span class="date-element">${formatDate(date, settings.dateFormat)}</span>`);
-    if (settings.showDay) parts.push(`<span class="day-element">${formatDay(date, settings.dayFormat)}</span>`);
-    parts.push(`<span class="time-element">${formatTime(date, settings.timeFormat)}</span>`);
-    if (settings.layout === 'vertical') {
-        const dateParts = [];
-        if (settings.showYear) dateParts.push(parts.shift());
-        if (settings.showDate) dateParts.push(parts.shift());
-        if (settings.showDay) dateParts.push(parts.shift());
-        const timePart = parts.join(' ');
-        return `<div class="date-section">${dateParts.join(' ')}</div><div class="time-section">${timePart}</div>`;
+    const dateSectionParts = [];
+    if (settings.showYear && settings.showDate) {
+        const year = `<span class="year-element">${date.getFullYear()}</span>`;
+        const dateStr = `<span class="date-element">${formatDate(date, settings.dateFormat)}</span>`;
+        if (settings.dateFormat === 'japanese') dateSectionParts.push(`${year}年${dateStr}`);
+        else if (settings.dateFormat === 'slash') dateSectionParts.push(`${year}/${dateStr}`);
+        else if (settings.dateFormat === 'dot') dateSectionParts.push(`${year}.${dateStr}`);
+    } else if (settings.showYear) {
+        dateSectionParts.push(`<span class="year-element">${date.getFullYear()}年</span>`);
+    } else if (settings.showDate) {
+        dateSectionParts.push(`<span class="date-element">${formatDate(date, settings.dateFormat, true)}</span>`);
     }
-    return parts.join(' ');
+    if (settings.showDay) {
+        dateSectionParts.push(`<span class="day-element">${formatDay(date, settings.dayFormat)}</span>`);
+    }
+    const timePart = `<span class="time-element">${formatTime(date, settings.timeFormat)}</span>`;
+    if (settings.layout === 'vertical') {
+        const dateHtml = dateSectionParts.length > 0 ? `<div class="date-section">${dateSectionParts.join(' ')}</div>` : '';
+        const timeHtml = `<div class="time-section">${timePart}</div>`;
+        return `${dateHtml}${timeHtml}`;
+    } else {
+        const allParts = [...dateSectionParts, timePart];
+        return allParts.join(' ');
+    }
 }
 
-function formatDate(date, format) {
+function formatDate(date, format, single = false) {
     const m = date.getMonth() + 1, d = date.getDate();
+    const pad = (num) => String(num).padStart(2, '0');
+    if (single && format === 'japanese') return `${m}月${d}日`;
     switch (format) {
         case 'japanese': return `${m}月${d}日`;
-        case 'slash': return `${String(m).padStart(2, '0')}/${String(d).padStart(2, '0')}`;
-        case 'dot': return `${String(m).padStart(2, '0')}.${String(d).padStart(2, '0')}`;
+        case 'slash': return `${pad(m)}/${pad(d)}`;
+        case 'dot': return `${pad(m)}.${pad(d)}`;
         default: return `${m}月${d}日`;
     }
 }
@@ -90,8 +111,8 @@ function formatTime(date, format) {
     const pad = (num) => String(num).padStart(2, '0');
     switch (format) {
         case 'japanese-hm': return `${h}時${m}分`;
-        case 'colon-hm': return `${pad(h)}:${pad(m)}`;
         case 'japanese-hms': return `${h}時${m}分${s}秒`;
+        case 'colon-hm': return `${pad(h)}:${pad(m)}`;
         case 'colon-hms': return `${pad(h)}:${pad(m)}:${pad(s)}`;
         default: return `${pad(h)}:${pad(m)}`;
     }
@@ -109,30 +130,25 @@ function applyClockStyles(element, settings) {
         if (dateSection) dateSection.style.gap = `${settings.elementSpacing}px`;
     }
     const setStyle = (selector, prop, value) => {
-        const el = element.querySelector(selector);
-        if (el) el.style[prop] = value;
+        element.querySelectorAll(selector).forEach(el => el.style[prop] = value);
     };
     setStyle('.year-element', 'fontSize', `${settings.yearFontSize}px`);
     setStyle('.date-element', 'fontSize', `${settings.dateFontSize}px`);
     setStyle('.day-element', 'fontSize', `${settings.dayFontSize}px`);
     setStyle('.time-element', 'fontSize', `${settings.timeFontSize}px`);
     if (settings.textStroke && settings.strokeWidth > 0) {
-        const { strokeWidth, strokeColor, fontColor } = settings;
-        let shadowParts = [];
-        for (let i = -strokeWidth; i <= strokeWidth; i++) {
-            for (let j = -strokeWidth; j <= strokeWidth; j++) {
-                if (i !== 0 || j !== 0) {
-                    shadowParts.push(`${i}px ${j}px 0 ${strokeColor}`);
-                }
-            }
+        const { strokeWidth, strokeColor } = settings;
+        const shadows = [];
+        const step = 22.5; // 360 / 16
+        for(let i = 0; i < 360; i += step) {
+            const angle = i * (Math.PI / 180);
+            const x = strokeWidth * Math.cos(angle);
+            const y = strokeWidth * Math.sin(angle);
+            shadows.push(`${x}px ${y}px 0 ${strokeColor}`);
         }
-        element.style.textShadow = shadowParts.join(', ');
-        element.style.webkitTextStroke = `${strokeWidth}px ${strokeColor}`;
-        element.style.webkitTextFillColor = fontColor;
+        element.style.textShadow = shadows.join(',');
     } else {
         element.style.textShadow = 'none';
-        element.style.webkitTextStroke = 'none';
-        element.style.webkitTextFillColor = 'inherit';
     }
 }
 
